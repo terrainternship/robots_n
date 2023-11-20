@@ -1,90 +1,139 @@
-from sklearn.feature_extraction.text import CountVectorizer  # pip install scikit-learn
-from sklearn.linear_model import LogisticRegression
-import sounddevice as sd  # pip install sounddevice
-import vosk  # pip install vosk
+from kivy.app import App
+from kivy.lang import Builder
+from kivy.uix.boxlayout import BoxLayout
+from kivy.properties import StringProperty
+from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
+from kivy.clock import mainthread
+from kivy.core.clipboard import Clipboard as Cb
+import threading
+import socket
 
-import json
-import queue
+KV = """
+MyBL:
+	orientation: "vertical"
+	size_hint: (0.95, 0.95)
+	pos_hint: {"center_x": 0.5, "center_y":0.5}
 
-import words
-from skills import *
-import voice
-
-q = queue.Queue()
-
-model = vosk.Model('model_small')  # голосовую модель vosk нужно поместить в папку с файлами проекта
-# https://alphacephei.com/vosk/
-# https://alphacephei.com/vosk/models
-
-device = sd.default.device  # <--- по умолчанию
-# или -> sd.default.device = 1, 3, python -m sounddevice просмотр
-samplerate = int(sd.query_devices(device[0], 'input')['default_samplerate'])  # получаем частоту микрофона
-
-
-def callback(indata, frames, time, status):
-    '''
-    Добавляет в очередь семплы из потока.
-    вызывается каждый раз при наполнении blocksize
-    в sd.RawInputStream'''
-
-    q.put(bytes(indata))
+	Label:
+		font_size: "15sp"
+		multiline: True
+		text_size: self.width*0.98, None
+		size_hint_x: 1.0
+		size_hint_y: None
+		height: self.texture_size[1] + 15
+		text: root.data_label
+		markup: True
+		on_ref_press: root.linki()		
 
 
-def recognize(data, vectorizer, clf):
-    '''
-    Анализ распознанной речи
-    '''
 
-    # проверяем есть ли имя бота в data, если нет, то return
-    trg = words.TRIGGERS.intersection(data.split())
-    if not trg:
-        return
+	TextInput:
+		id: Inp
+		multiline: False
+		padding_y: (5,5)
+		size_hint: (1, 0.5)
+		on_text: app.process()
 
-    # удаляем имя бота из текста
-    data.replace(list(trg)[0], '')
+	Button:
+		text: "Поиск по названию"
+		bold: True
+		background_color:'#00FFCE'
+		size_hint: (1,0.5)
+		on_press: root.callback()
 
-    # получаем вектор полученного текста
-    # сравниваем с вариантами, получая наиболее подходящий ответ
-    text_vector = vectorizer.transform([data]).toarray()[0]
-    answer = clf.predict([text_vector])[0]
+	Button:
+		text: "Поиск по описанию"
+		bold: True
+		background_color:'#00FFCE'
+		size_hint: (1,0.5)
+		on_press: root.callback2()
 
-    # получение имени функции из ответа из data_set
-    func_name = answer.split()[0]
+	Button:
+		text: "Случайный"
+		bold: True
+		background_color:'#00FFCE'
+		size_hint: (1,0.5)
+		on_press: root.callback3()
 
-    voice.speaker(answer.replace(func_name, ''))
+	Button:
+		text: "Отправить"
+		bold: True
+		background_color:'#00FFCE'
+		size_hint: (1,0.5)
+		on_press: root.callback4()
 
-    # запуск функции из skills
-    exec(func_name + '()')
-
-
-def main():
-    '''
-    Обучаем матрицу ИИ
-    и постоянно слушаем микрофон
-    '''
-
-    # Обучение матрицы на data_set модели
-    vectorizer = CountVectorizer()
-    vectors = vectorizer.fit_transform(list(words.data_set.keys()))
-
-    clf = LogisticRegression()
-    clf.fit(vectors, list(words.data_set.values()))
-
-    del words.data_set
-
-    # постоянная прослушка микрофона
-    with sd.RawInputStream(samplerate=samplerate, blocksize=16000, device=device[0], dtype='int16',
-                           channels=1, callback=callback):
-
-        rec = vosk.KaldiRecognizer(model, samplerate)
-        while True:
-            data = q.get()
-            if rec.AcceptWaveform(data):
-                data = json.loads(rec.Result())['text']
-                recognize(data, vectorizer, clf)
-            # else:
-            #     print(rec.PartialResult())
+"""
 
 
-if __name__ == '__main__':
-    main()
+class MyBL(BoxLayout):
+
+    data_label = StringProperty("Треугольник!")
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        SERVER = "10.8.0.6"
+        PORT = 1488
+
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.client.connect((SERVER, PORT))
+        self.client.sendall(bytes("979879789", 'UTF-8'))
+
+        threading.Thread(target=self.get_data).start()
+
+    def callback(self):
+        print("Поиск по названию")
+        self.client.sendall(bytes("Поиск по названию", 'UTF-8'))
+
+    def callback2(self):
+        print("Поиск по описанию")
+        self.client.sendall(bytes("Поиск по описанию", 'UTF-8'))
+
+    def callback3(self):
+        print("Случайный")
+        self.client.sendall(bytes("Случайный", 'UTF-8'))
+
+    def callback4(self):
+        print("Отправить")
+        self.client.sendall(bytes(self.ids.Inp.text, 'UTF-8'))
+
+    def get_data(self):
+        while App.get_running_app().running:
+            in_data = self.client.recv(4096)
+            print("От сервера :", in_data.decode())
+            kkk = in_data.decode()
+            zzz = str(kkk)
+            lines = zzz.split('\n')
+            print(lines)
+            if '\t\t\t\t\t' in lines:
+                lines[4] = "==========="
+            for ggg in lines:
+                if ggg.startswith("https://"):
+                    self.ttt = ggg
+
+                    ggg = '[ref=linki][color=#00FFCE]' + ggg + '[/color][/ref]'
+                self.set_data_label(ggg)
+
+    def linki(self):
+        print("В буффер")
+        Cb.copy(self.ttt)
+
+    @mainthread
+    def set_data_label(self, data):
+        self.data_label += str(data) + "\n"
+
+
+class MyApp(App):
+    running = True
+
+    def process(self):
+        text = self.root.ids.Inp.text
+
+    def build(self):
+        return Builder.load_string(KV)
+
+    def on_stop(self):
+        self.running = False
+
+
+MyApp().run()
