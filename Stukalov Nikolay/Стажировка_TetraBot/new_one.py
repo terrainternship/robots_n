@@ -165,24 +165,6 @@ class TetraBotBL(BoxLayout):
     def stop(self):
         self.ids.output_label.text = "Выполняется команда: Стоп"
 
-    def update_triangle_vertices(self):
-        # Ширина и высота кнопки
-        btn_width = dp(100)
-        btn_height = dp(100)
-
-        # Расчет высоты равностороннего треугольника
-        triangle_height = sqrt(3) / 2 * btn_width
-
-        # Расчет вертикальной позиции
-        vertical_pos = (btn_height - triangle_height) / 2
-
-        # Координаты вершин
-        left_vertex = (self.x, self.y + vertical_pos)
-        right_vertex = (self.x, self.y + vertical_pos + triangle_height)
-        top_vertex = (self.x + btn_width, self.y + btn_height / 2)
-
-        return [left_vertex[0], left_vertex[1], right_vertex[0], right_vertex[1], top_vertex[0], top_vertex[1]]
-
 class MyApp(App):
     def build(self):
         return Builder.load_string(KV)
