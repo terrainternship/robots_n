@@ -1,0 +1,22 @@
+Главное ограничение по работе с Google Colab - невозможность подключения к локальному микрофону для потокового захвата аудио в python из среды Google Colab. Используется прокладка в виде java-script для возможности записи аудио в файл, сохранения и дальнейшей работы.
+Напрямую из буфера примеров найти не смог - только описания на разную среду java_script и python, и, соответственно, разный формат буфера, в котором хранятся временные данные (аудио).
+Локально все работает.
+Данную версию представил на anaconda jupyter notebook.
+
+Речевые модели vosk - URL и описание моделей - https://github.com/alphacep/vosk-space/blob/master/models.md
+"https://alphacephei.com/vosk/models/vosk-model-small-ru-0.22.zip"
+
+Некоторые тесты сторонними организациями-энтузиастами:
+https://alphacephei.com/nsh/2023/01/22/russian-models.html
+
+Парочка других статей:
+https://vc.ru/dev/247450-oflayn-raspoznavanie-rechi-biblioteka-vosk
+https://skine.ru/articles/269573/
+https://qaa-engineer.ru/kak-ispolzovat-pocketsphinx-dlya-raspoznavaniya-neskolkih-klyuchevyh-slov-v-python/
+
+Статей, в общем-то, достаточно много.
+
+Модели, которые могут работать без online-подключения:
+
+PocketSphinx - https://pypi.org/project/pocketsphinx/#data
+vosk - https://pypi.org/project/vosk/
