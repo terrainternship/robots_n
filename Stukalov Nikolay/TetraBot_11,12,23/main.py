@@ -7,7 +7,8 @@ import sounddevice as sd
 import vosk
 import json
 
-from word_to_number_ru import word_to_number_fuzzy_2
+from word_to_number_ru import turn_numbers_in_text_into_int
+from skills import tranfer_text_to_command
 
 from math import sqrt
 
@@ -237,9 +238,10 @@ class TetraBotBL(BoxLayout):
         Clock.schedule_once(lambda dt: update_text(), 0)
 
     def send_command(self):
-        command_list = word_to_number_fuzzy_2(self.ids.Inp.text)
+        command_list = turn_numbers_in_text_into_int(self.ids.Inp.text)
+        command = ' '.join(str(item) for item in tranfer_text_to_command(command_list))
         command_str = ' '.join(str(item) for item in command_list)
-        self.ids.output_label.text = f"Выполняется команда: {command_str}"
+        self.ids.output_label.text = f"Выполняется команда: {command_str}\nКоманда: {command}"
 
     def move_left(self):
         self.ids.output_label.text = "Выполняется команда: Влево"
