@@ -1,0 +1,148 @@
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.content.Context;
+import android.hardware.Sensor;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.ImageButton;
+import android.widget.TextView;
+
+
+public class MainActivity extends AppCompatActivity implements SensorEventListener
+{
+
+    private ImageButton mButtonUP;
+    private ImageButton mButtonDOWN;
+    private ImageButton mButtonLEFT;
+    private ImageButton mButtonRIGHT;
+    public static byte direction = 100;
+
+    private SensorManager mSensorManager;
+    private Sensor mOrientation;
+
+    private float xy_angle;
+    private float xz_angle;
+  
+
+    private int x;
+    private int y;
+   
+
+    private TextView xyView;
+    private TextView xzView;
+    private TextView zyView;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        new HTTP_client(40000);
+        new Udp_client();
+
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE); // Получаем менеджер сенсоров
+        mOrientation = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER); // Получаем датчик положения
+        mSensorManager.registerListener(this, mOrientation, SensorManager.SENSOR_DELAY_NORMAL);
+
+
+        xyView = (TextView) findViewById(R.id.textViewX);  //
+        xzView = (TextView) findViewById(R.id.textViewY);  // Наши текстовые поля для вывода показаний
+        zyView = (TextView) findViewById(R.id.textViewZ);// сюда пихнем "direction"
+
+
+        mButtonUP = (ImageButton) findViewById(R.id.imageButtonUP);
+        mButtonDOWN = (ImageButton) findViewById(R.id.imageButtonDown);
+        mButtonLEFT = (ImageButton) findViewById(R.id.imageButtonLeft);
+        mButtonRIGHT = (ImageButton) findViewById(R.id.imageButtonRight);
+		// кнопки не используются
+       
+
+    }
+
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) { //Изменение точности показаний датчика
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+
+        super.onPause();
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) { //Изменение показаний датчиков
+
+
+        xy_angle = event.values[0]*10; //Плоскость XY
+        xz_angle = event.values[1]*10; //Плоскость XZ
+       
+
+        x=-(int) xy_angle*1;
+        y=-(int) xz_angle*1;
+       
+
+        xyView.setText("         x =        "+ String.valueOf(x));
+        xzView.setText("         y =         "+String.valueOf(y));
+        zyView.setText("         direction     "+String.valueOf(direction));
+
+
+        if(y>-40&&y<-20){
+
+            direction=100;// скорость вперед ноль, никуда не едем, смотрим есть ли повороты
+
+                    if (x>10){//скорость вправо от 10 до 30 диапазон 20 единиц
+
+                        direction=(byte)(x+30);
+                        if (direction>60){direction=60;}
+
+                    }
+                    if(x<-10){
+                        direction=(byte)(-x+50);
+                        if (direction>80){direction=80;}
+
+                    }
+
+        }
+
+        else {
+
+            if (y > -20) {// едем вперед, диапазон -20: 20 итого 40 единиц
+
+                direction = (byte) (y / 2 + 10);
+                if (direction > 20) {
+                    direction = 20;
+                }
+                ;
+            }
+
+
+            if (y < -40) {// едем назад, диапазон -40: -80 итого 40 единиц
+
+                direction = (byte) (-y - 20);
+                if (direction > 40) {
+                    direction = 40;
+                }
+                ;
+
+
+            }
+
+
+        }
+    }
+}
+
+
+  //  итого если direction 100 стоп
+  //  1-20 вперед , угол от -20
+  //  21-40 назад , угол от -40
+  //  41-60 направо, угод 10
+  //  61-80 налево, угол от -10
