@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Simple FiWi Arduino</string>
+    <string name="captionText">Управление кнопками</string>
+    <string name="up_button">вперед: %1$d</string>
+    <string name="down_button">назад: %1$d</string>
+    <string name="left_button">влево: %1$d</string>
+    <string name="right_button">вправо: %1$d</string>
+    <string name="warRobot">Боевой робот ожидает!</string>
+    <string name="typeOperate">Выберите тип управления</string>
+
+    <string name="recognize_file">Распознать файл</string>
+    <string name="recognize_microphone">Распознать с микрофона</string>
+    <string name="stop_microphone">Остановить микрофон</string>
+    <string name="preparing">Подготовка к распознаванию\n</string>
+    <string name="ready">Готов\n</string>
+    <string name="failed">Ошибка инициализации распознавания %s\n</string>
+    <string name="starting">Начали\n</string>
+    <string name="say_something">Скажите что-нибудь\n</string>
+    <string name="stop_file">Остановить файл</string>
+    <string name="pause">Пауза</string>
+    <string name="continueRecognition">Продолжить</string>
+    <string name="giroscopCaption">Управление гироскопом</string>
+    <string name="voiceCaption">Голосовое управление</string>
+    <string name="propertyWiFi">Свойства WiFi соединения</string>
+</resources>
