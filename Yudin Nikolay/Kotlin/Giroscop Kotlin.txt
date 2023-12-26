@@ -1,0 +1,97 @@
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
+import android.widget.ImageButton
+import android.widget.TextView
+
+class MainActivity : AppCompatActivity(), SensorEventListener {
+
+    private lateinit var mButtonUP: ImageButton
+    private lateinit var mButtonDOWN: ImageButton
+    private lateinit var mButtonLEFT: ImageButton
+    private lateinit var mButtonRIGHT: ImageButton
+    companion object {
+        var direction: Byte = 100
+    }
+
+    private lateinit var mSensorManager: SensorManager
+    private lateinit var mOrientation: Sensor
+
+    private var xy_angle: Float = 0.0f
+    private var xz_angle: Float = 0.0f
+
+    private var x: Int = 0
+    private var y: Int = 0
+
+    private lateinit var xyView: TextView
+    private lateinit var xzView: TextView
+    private lateinit var zyView: TextView
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        HTTP_client(40000)
+        Udp_client()
+
+        mSensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        mOrientation = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        mSensorManager.registerListener(this, mOrientation, SensorManager.SENSOR_DELAY_NORMAL)
+
+        xyView = findViewById(R.id.textViewX)
+        xzView = findViewById(R.id.textViewY)
+        zyView = findViewById(R.id.textViewZ)
+
+        mButtonUP = findViewById(R.id.imageButtonUP)
+        mButtonDOWN = findViewById(R.id.imageButtonDown)
+        mButtonLEFT = findViewById(R.id.imageButtonLeft)
+        mButtonRIGHT = findViewById(R.id.imageButtonRight)
+        // кнопки не используются
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        // Изменение точности показаний датчика
+    }
+
+    override fun onResume() {
+        super.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+    }
+
+    override fun onSensorChanged(event: SensorEvent) {
+        // Изменение показаний датчиков
+        xy_angle = event.values[0] * 10
+        xz_angle = event.values[1] * 10
+
+        x = -(xy_angle.toInt() * 1)
+        y = -(xz_angle.toInt() * 1)
+
+        xyView.text = "         x =        ${x}"
+        xzView.text = "         y =         ${y}"
+        zyView.text = "         direction     ${direction}"
+
+        if (y > -40 && y < -20) {
+            direction = 100
+            if (x > 10) {
+                direction = (x + 30).toByte().coerceAtMost(60)
+            }
+            if (x < -10) {
+                direction = (-x + 50).toByte().coerceAtMost(80)
+            }
+        } else {
+            if (y > -20) {
+                direction = ((y / 2) + 10).toByte().coerceAtMost(20)
+            }
+            if (y < -40) {
+                direction = ((-y - 20).toByte().coerceAtMost(40))
+            }
+        }
+    }
+}

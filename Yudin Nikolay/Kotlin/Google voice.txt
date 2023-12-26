@@ -1,0 +1,141 @@
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.TextView;
+import java.util.ArrayList;
+import android.content.Intent;
+import android.speech.RecognizerIntent;
+
+public class MainActivity extends AppCompatActivity {
+
+    private ImageButton mButtonUP;
+    public static byte direction = 100;
+    public String stroka_otveta;
+
+    private static final int Print_Words = 100;
+    private TextView EnteredText1;
+    private TextView EnteredText2;
+    public static TextView EnteredText3;
+    private boolean slovo_raspoznano =false;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        new Udp_client();
+        new HTTP_client(40000);
+
+        EnteredText1 = (TextView) findViewById(R.id.textViewX);  //
+        EnteredText2 = (TextView) findViewById(R.id.textViewY);  //
+        EnteredText3 = (TextView) findViewById(R.id.textViewZ);  //
+
+        mButtonUP = (ImageButton) findViewById(R.id.imageButtonUP);
+
+        mButtonUP.setOnTouchListener(new View.OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+
+                    if(HTTP_client.ok){ //Вызываем RecognizerIntent для голосового ввода и преобразования голоса в текст:
+                        EnteredText3.setText("             http клиент подсоединен");
+                        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Ну, скажи, куда ехать-то??? ");
+                        startActivityForResult(intent, Print_Words);
+
+                    }
+                    else {
+                        EnteredText3.setText("            нетути никого");
+
+                    }
+
+		          }
+                if (event.getAction() == MotionEvent.ACTION_UP ){
+
+                }
+
+                return false;
+            }
+
+
+        });
+
+
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        //Проверяем успешность получения обратного ответа:
+        if (requestCode==Print_Words && resultCode==RESULT_OK) {
+            //Как результат получаем строковый массив слов, похожих на произнесенное:
+            ArrayList<String>result=data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            //и отображаем их в элементе TextView:
+
+            stroka_otveta = result.toString();
+    }
+        StringBuffer sb = new StringBuffer(stroka_otveta);
+        sb.deleteCharAt(stroka_otveta.length()-1);
+        sb.deleteCharAt(0);
+
+
+        stroka_otveta=sb.toString();
+        String[] words = stroka_otveta.split("\\s"); // Разбиение строки на слова с помощью разграничителя (пробел)
+        // Вывод на экран
+
+        for(int i = 0; i< words.length;i++) {
+
+                if(words[i].equals("налево,")||words[i].equals("налево")) {
+
+                    direction = 1;
+                    slovo_raspoznano=true;
+                    stroka_otveta=words[i];
+                }
+
+                if(words[i].equals("направо,")||words[i].equals("направо")){
+                   direction=2;
+                    slovo_raspoznano=true;
+                    stroka_otveta=words[i];
+                }
+
+                if(words[i].equals("назад,")|| words[i].equals("назад")){
+                    direction=4;
+                    slovo_raspoznano=true;
+                    stroka_otveta=words[i];
+                }
+
+                if(words[i].equals("вперед,")|| words[i].equals("вперёд,")|| words[i].equals("вперед") || words[i].equals("вперёд")){
+                    direction=3;
+                    slovo_raspoznano=true;
+                    stroka_otveta=words[i];
+                }
+
+            if(words[i].equals("стоп,")|| words[i].equals("стой,")|| words[i].equals("стоп") || words[i].equals("стой")){
+                direction=100;
+                slovo_raspoznano=true;
+                stroka_otveta=words[i];
+            }
+
+
+        }
+
+
+            if(!slovo_raspoznano){
+                direction=100;
+               stroka_otveta="говори внятно, а то них... непонятно";
+            }
+
+        EnteredText1.setText("          "+direction+"  " +stroka_otveta);
+        slovo_raspoznano=false;
+
+
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+}

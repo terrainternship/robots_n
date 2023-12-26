@@ -1,0 +1,101 @@
+import android.content.Intent
+import android.os.Bundle
+import android.speech.RecognizerIntent
+import android.support.v7.app.AppCompatActivity
+import android.view.MotionEvent
+import android.view.View
+import android.widget.ImageButton
+import android.widget.TextView
+import java.util.ArrayList
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var mButtonUP: ImageButton
+    public var direction: Byte = 100
+    public var stroka_otveta: String? = null
+
+    private val Print_Words = 100
+    private lateinit var EnteredText1: TextView
+    private lateinit var EnteredText2: TextView
+    public lateinit var EnteredText3: TextView
+    private var slovo_raspoznano = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        Udp_client()
+        HTTP_client(40000)
+
+        EnteredText1 = findViewById(R.id.textViewX)
+        EnteredText2 = findViewById(R.id.textViewY)
+        EnteredText3 = findViewById(R.id.textViewZ)
+
+        mButtonUP = findViewById(R.id.imageButtonUP)
+
+        mButtonUP.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                if (HTTP_client.ok) {
+                    EnteredText3.text = "             http клиент подсоединен"
+                    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Ну, скажи, куда ехать-то??? ")
+                    startActivityForResult(intent, Print_Words)
+                } else {
+                    EnteredText3.text = "            нетути никого"
+                }
+            }
+            if (event.action == MotionEvent.ACTION_UP) {
+            }
+            false
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == Print_Words && resultCode == RESULT_OK) {
+            val result = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            stroka_otveta = result?.toString()
+        }
+        val sb = StringBuilder(stroka_otveta)
+        sb.deleteCharAt(stroka_otveta?.length?.minus(1) ?: 0)
+        sb.deleteCharAt(0)
+        stroka_otveta = sb.toString()
+        val words = stroka_otveta?.split("\\s".toRegex())?.toTypedArray()
+        for (i in words?.indices ?: emptyArray()) {
+            when (words?.get(i)) {
+                "налево,", "налево" -> {
+                    direction = 1
+                    slovo_raspoznano = true
+                    stroka_otveta = words[i]
+                }
+                "направо,", "направо" -> {
+                    direction = 2
+                    slovo_raspoznano = true
+                    stroka_otveta = words[i]
+                }
+                "назад,", "назад" -> {
+                    direction = 4
+                    slovo_raspoznano = true
+                    stroka_otveta = words[i]
+                }
+                "вперед,", "вперёд,", "вперед", "вперёд" -> {
+                    direction = 3
+                    slovo_raspoznano = true
+                    stroka_otveta = words[i]
+                }
+                "стоп,", "стой,", "стоп", "стой" -> {
+                    direction = 100
+                    slovo_raspoznano = true
+                    stroka_otveta = words[i]
+                }
+            }
+        }
+        if (!slovo_raspoznano) {
+            direction = 100
+            stroka_otveta = "говори внятно, а то них... непонятно"
+        }
+        EnteredText1.text = "          $direction  $stroka_otveta"
+        slovo_raspoznano = false
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+}
